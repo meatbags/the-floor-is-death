@@ -212,6 +212,8 @@ var _camera = __webpack_require__(9);
 
 var _lighting = __webpack_require__(23);
 
+var _player = __webpack_require__(24);
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Scene = function () {
@@ -220,6 +222,7 @@ var Scene = function () {
 
     this.scene = new THREE.Scene();
     this.camera = new _camera.Camera(width, height);
+    this.player = new _player.Player(this.scene);
     this.lighting = new _lighting.Lighting(this.scene);
 
     this.scene.add(new THREE.Mesh(new THREE.BoxBufferGeometry(6, 2, 6), new THREE.MeshPhongMaterial({})));
@@ -228,7 +231,7 @@ var Scene = function () {
   _createClass(Scene, [{
     key: 'update',
     value: function update(delta) {
-      //
+      this.camera.update(delta);
     }
   }, {
     key: 'getScene',
@@ -338,13 +341,19 @@ var Camera = function () {
     this.near = 0.1;
     this.far = 1000;
     this.origin = new THREE.Vector3(0, 0, 0);
+    this.angle = 0;
+    this.len = 20;
     this.camera = new THREE.PerspectiveCamera(this.fov, this.aspectRatio, this.near, this.far);
-    this.camera.updateProjectionMatrix();
-    this.camera.position.set(10, 5, 10);
-    this.camera.lookAt(this.origin);
   }
 
   _createClass(Camera, [{
+    key: "update",
+    value: function update(delta) {
+      this.angle += delta * Math.PI * 0.125;
+      this.camera.position.set(Math.cos(this.angle) * this.len, this.len / 2, Math.sin(this.angle) * this.len);
+      this.camera.lookAt(this.origin);
+    }
+  }, {
     key: "getCamera",
     value: function getCamera() {
       return this.camera;
@@ -1425,6 +1434,145 @@ var Lighting = function () {
 }();
 
 exports.Lighting = Lighting;
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Player = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _input = __webpack_require__(25);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Player = function () {
+  function Player(scene) {
+    var _this = this;
+
+    _classCallCheck(this, Player);
+
+    this.scene = scene;
+    this.position = new THREE.Vector3();
+    this.keyboard = new _input.Keyboard(function (key) {
+      _this.onKeyboard(key);
+    });
+  }
+
+  _createClass(Player, [{
+    key: 'onKeyboard',
+    value: function onKeyboard(key) {
+      var keyName = key.key;
+      console.log(keyName, this.keyboard.keys[keyName]);
+    }
+  }]);
+
+  return Player;
+}();
+
+exports.Player = Player;
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _keyboard = __webpack_require__(26);
+
+Object.keys(_keyboard).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _keyboard[key];
+    }
+  });
+});
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Keyboard = function () {
+  function Keyboard(onKeyboardEvent) {
+    var _this = this;
+
+    _classCallCheck(this, Keyboard);
+
+    // keyboard event handlers
+
+    this.keys = {};
+    this.onKeyboardEvent = onKeyboardEvent;
+    document.addEventListener('keydown', function (key) {
+      _this.onKeyDown(key);
+    });
+    document.addEventListener('keyup', function (key) {
+      _this.onKeyUp(key);
+    });
+  }
+
+  _createClass(Keyboard, [{
+    key: 'onKeyDown',
+    value: function onKeyDown(key) {
+      this.keys[key.key] = true;
+      this.onKeyboardEvent(key);
+    }
+  }, {
+    key: 'onKeyUp',
+    value: function onKeyUp(key) {
+      this.keys[key.key] = false;
+      this.onKeyboardEvent(key);
+    }
+  }, {
+    key: 'isSpecial',
+    value: function isSpecial() {
+      return this.keys['Shift'] || this.keys['Control'] || this.keys['Alt'];
+    }
+  }, {
+    key: 'isControl',
+    value: function isControl() {
+      return this.keys['Control'];
+    }
+  }, {
+    key: 'isShift',
+    value: function isShift() {
+      return this.keys['Shift'];
+    }
+  }, {
+    key: 'isAlt',
+    value: function isAlt() {
+      return this.keys['Alt'];
+    }
+  }]);
+
+  return Keyboard;
+}();
+
+exports.Keyboard = Keyboard;
 
 /***/ })
 /******/ ]);

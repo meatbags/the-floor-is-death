@@ -1,10 +1,12 @@
 import { Camera } from './camera';
 import { Lighting } from './lighting';
+import { Player } from './player';
 
 class Scene {
   constructor(width, height) {
     this.scene = new THREE.Scene();
     this.camera = new Camera(width, height);
+    this.player = new Player(this.scene);
     this.lighting = new Lighting(this.scene);
 
     this.scene.add(
@@ -16,7 +18,7 @@ class Scene {
   }
 
   update(delta) {
-    //
+    this.camera.update(delta);
   }
 
   getScene() {
