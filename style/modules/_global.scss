@@ -1,0 +1,21 @@
+div, * {
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $fontStack;
+  font-size: $fontSize;
+  letter-spacing: $letterSpacing;
+  line-height: $lineHeight;
+  background-color: $dark;
+  color: $light;
+}
+
+a {
+  color: inherit;
+}
