@@ -232,6 +232,7 @@ var Scene = function () {
       var size = Math.random() * 5 + 5;
       var mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(5, 1, 5), new THREE.MeshPhongMaterial({}));
       mesh.position.set(Math.random() * 15 - 7, i * 2.5, 0);
+      mesh.rotation.set(Math.random() * Math.PI * 0.125 - Math.PI * 0.0625, Math.random() * Math.PI * 0.125 - Math.PI * 0.0625, Math.random() * Math.PI * 0.125 - Math.PI * 0.0625);
       this.scene.add(mesh);
       this.colliderSystem.add(new Collider.Mesh(mesh));
     }
@@ -349,10 +350,10 @@ var Camera = function () {
     // perspective camera
 
     this.origin = origin;
-    this.fov = 90;
+    this.fov = 75;
     this.aspectRatio = width / height;
     this.angle = -Math.PI * 0.5;
-    this.len = 8;
+    this.len = 10;
     this.camera = new THREE.PerspectiveCamera(this.fov, this.aspectRatio, 0.1, 1000);
   }
 
@@ -1479,7 +1480,7 @@ var Player = function () {
       motion: new THREE.Vector3()
     };
     this.speed = 10;
-    this.jump = 15;
+    this.jump = 17;
     this.falling = false;
     this.fallTime = 0;
     this.fallTimeThreshold = 0.125;
@@ -1488,7 +1489,7 @@ var Player = function () {
       _this.onKeyboard(key);
     });
     this.collider = new Collider.Collider(this.target.position, this.motion);
-    this.collider.setPhysics({ gravity: 35 });
+    this.collider.setPhysics({ gravity: 38 });
     this.colliderSystem = colliderSystem;
     this.group = new THREE.Group();
     this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshPhongMaterial({}));
@@ -1567,9 +1568,9 @@ var Player = function () {
     value: function update(delta) {
       this.move(delta);
       this.collider.move(delta, this.colliderSystem);
-      this.position.x = (0, _maths.Blend)(this.position.x, this.target.position.x, 0.25);
-      this.position.y = (0, _maths.Blend)(this.position.y, this.target.position.y, 0.25);
-      this.position.z = (0, _maths.Blend)(this.position.z, this.target.position.z, 0.25);
+      this.position.x = (0, _maths.Blend)(this.position.x, this.target.position.x, 0.4);
+      this.position.y = (0, _maths.Blend)(this.position.y, this.target.position.y, 0.4);
+      this.position.z = (0, _maths.Blend)(this.position.z, this.target.position.z, 0.4);
       this.group.position.set(this.position.x, this.position.y, this.position.z);
     }
   }]);

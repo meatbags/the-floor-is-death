@@ -12,14 +12,14 @@ class Player {
       motion: new THREE.Vector3()
     };
     this.speed = 10;
-    this.jump = 15;
+    this.jump = 17;
     this.falling = false;
     this.fallTime = 0;
     this.fallTimeThreshold = 0.125;
     this.keys = {};
     this.keyboard = new Keyboard((key) => { this.onKeyboard(key); });
     this.collider = new Collider.Collider(this.target.position, this.motion);
-    this.collider.setPhysics({gravity: 35});
+    this.collider.setPhysics({gravity: 38});
     this.colliderSystem = colliderSystem;
     this.group = new THREE.Group();
     this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshPhongMaterial({}));
@@ -94,9 +94,9 @@ class Player {
   update(delta) {
     this.move(delta);
     this.collider.move(delta, this.colliderSystem);
-    this.position.x = Blend(this.position.x, this.target.position.x, 0.25);
-    this.position.y = Blend(this.position.y, this.target.position.y, 0.25);
-    this.position.z = Blend(this.position.z, this.target.position.z, 0.25);
+    this.position.x = Blend(this.position.x, this.target.position.x, 0.4);
+    this.position.y = Blend(this.position.y, this.target.position.y, 0.4);
+    this.position.z = Blend(this.position.z, this.target.position.z, 0.4);
     this.group.position.set(this.position.x, this.position.y, this.position.z);
   }
 }

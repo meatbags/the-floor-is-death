@@ -3,10 +3,10 @@ class Camera {
     // perspective camera
 
     this.origin = origin;
-    this.fov = 90;
+    this.fov = 75;
     this.aspectRatio = width / height;
     this.angle = -Math.PI * 0.5;
-    this.len = 8;
+    this.len = 10;
     this.camera = new THREE.PerspectiveCamera(this.fov, this.aspectRatio, 0.1, 1000);
   }
 

@@ -19,6 +19,11 @@ class Scene {
         new THREE.MeshPhongMaterial({})
       );
       mesh.position.set(Math.random() * 15 - 7, i * 2.5, 0);
+      mesh.rotation.set(
+        Math.random() * Math.PI * 0.125 - Math.PI * 0.0625,
+        Math.random() * Math.PI * 0.125 - Math.PI * 0.0625,
+        Math.random() * Math.PI * 0.125 - Math.PI * 0.0625
+      );
       this.scene.add(mesh);
       this.colliderSystem.add(new Collider.Mesh(mesh))
     }
