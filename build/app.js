@@ -222,7 +222,8 @@ var Scene = function () {
 
     this.scene = new THREE.Scene();
     this.camera = new _camera.Camera(width, height);
-    this.player = new _player.Player(this.scene);
+    this.colliderSystem = new Collider.System();
+    this.player = new _player.Player(this.scene, this.colliderSystem);
     this.lighting = new _lighting.Lighting(this.scene);
 
     this.scene.add(new THREE.Mesh(new THREE.BoxBufferGeometry(6, 2, 6), new THREE.MeshPhongMaterial({})));
@@ -1451,26 +1452,92 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _input = __webpack_require__(25);
 
+var _maths = __webpack_require__(27);
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Player = function () {
-  function Player(scene) {
+  function Player(scene, colliderSystem) {
     var _this = this;
 
     _classCallCheck(this, Player);
 
+    // represents the player
+
     this.scene = scene;
     this.position = new THREE.Vector3();
+    this.motion = new THREE.Vector3();
+    this.target = { position: new THREE.Vector3() };
+    this.speed = 6;
+    this.jump = 12;
+    this.falling = false;
+    this.fallTime = 0;
+    this.fallTimeThreshold = 0.1;
+    this.keys = {};
     this.keyboard = new _input.Keyboard(function (key) {
       _this.onKeyboard(key);
     });
+    this.collider = new Collider.Collider(this.target.position, this.motion);
+    this.colliderSystem = colliderSystem;
   }
 
   _createClass(Player, [{
     key: 'onKeyboard',
     value: function onKeyboard(key) {
-      var keyName = key.key;
-      console.log(keyName, this.keyboard.keys[keyName]);
+      switch (key) {
+        case 'a':case 'A':case 'ArrowLeft':
+          this.keys.left = this.keyboard.keys[key];
+          break;
+        case 'd':case 'D':case 'ArrowRight':
+          this.keys.right = this.keyboard.keys[key];
+          break;
+        case 'w':case 'W':case 'ArrowUp':case ' ':
+          this.keys.up = this.keyboard.keys[key];
+          break;
+        case 's':case 'S':case 'ArrowDown':
+          this.keys.down = this.keyboard.keys[key];
+          break;
+        default:
+          break;
+      }
+    }
+  }, {
+    key: 'move',
+    value: function move(delta) {
+      // translate key input to motion
+
+      if (this.keys.left || this.keys.right) {
+        this.target.motion.z = ((this.keys.left ? -1 : 0) + (this.keys.right ? 1 : 0)) * this.speed;
+      }
+
+      if (this.keys.up) {
+        this.keys.up = false;
+
+        if (this.motion.y == 0 || this.fallTime < this.fallTimeThreshold) {
+          this.motion.y = this.jump;
+          this.fallTime = this.fallTimeThreshold;
+        }
+      }
+
+      this.falling = this.motion.y != 0;
+      this.fallTime = this.falling ? this.fallTime + delta : 0;
+
+      if (!this.falling) {
+        this.motion.x = this.target.motion.x;
+        this.motion.z = this.target.motion.z;
+      } else {
+        this.motion.x = (0, _maths.Blend)(this.motion.x, this.target.motion.x, 0.1);
+        this.motion.z = (0, _maths.Blend)(this.motion.x, this.target.motion.x, 0.1);
+      }
+    }
+  }, {
+    key: 'update',
+    value: function update(delta) {
+      this.move();
+      this.collider.move(this.colliderSystem);
+      this.position.x = (0, _maths.Blend)(this.position.x, this.target.position.x, 0.1);
+      this.position.y = (0, _maths.Blend)(this.position.y, this.target.position.y, 0.1);
+      this.position.z = (0, _maths.Blend)(this.position.z, this.target.position.z, 0.1);
     }
   }]);
 
@@ -1518,7 +1585,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Keyboard = function () {
-  function Keyboard(onKeyboardEvent) {
+  function Keyboard(onEvent) {
     var _this = this;
 
     _classCallCheck(this, Keyboard);
@@ -1526,7 +1593,7 @@ var Keyboard = function () {
     // keyboard event handlers
 
     this.keys = {};
-    this.onKeyboardEvent = onKeyboardEvent;
+    this.onEvent = onEvent;
     document.addEventListener('keydown', function (key) {
       _this.onKeyDown(key);
     });
@@ -1539,13 +1606,13 @@ var Keyboard = function () {
     key: 'onKeyDown',
     value: function onKeyDown(key) {
       this.keys[key.key] = true;
-      this.onKeyboardEvent(key);
+      this.onEvent(key.key);
     }
   }, {
     key: 'onKeyUp',
     value: function onKeyUp(key) {
       this.keys[key.key] = false;
-      this.onKeyboardEvent(key);
+      this.onEvent(key.key);
     }
   }, {
     key: 'isSpecial',
@@ -1573,6 +1640,45 @@ var Keyboard = function () {
 }();
 
 exports.Keyboard = Keyboard;
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _general = __webpack_require__(28);
+
+Object.keys(_general).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _general[key];
+    }
+  });
+});
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var Blend = function Blend(a, b, factor) {
+  return (b - a) * factor + a;
+};
+
+exports.Blend = Blend;
 
 /***/ })
 /******/ ]);

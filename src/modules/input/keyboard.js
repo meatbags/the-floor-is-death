@@ -1,21 +1,21 @@
 class Keyboard {
-  constructor(onKeyboardEvent) {
+  constructor(onEvent) {
     // keyboard event handlers
 
     this.keys = {};
-    this.onKeyboardEvent = onKeyboardEvent;
+    this.onEvent = onEvent;
     document.addEventListener('keydown', (key) => { this.onKeyDown(key); });
     document.addEventListener('keyup', (key) => { this.onKeyUp(key); });
   }
 
   onKeyDown(key) {
     this.keys[key.key] = true;
-    this.onKeyboardEvent(key);
+    this.onEvent(key.key);
   }
 
   onKeyUp(key) {
     this.keys[key.key] = false;
-    this.onKeyboardEvent(key);
+    this.onEvent(key.key);
   }
 
   isSpecial() {
