@@ -2,7 +2,7 @@ import { Master } from './modules';
 
 class App {
   constructor() {
-
+    this.master = new Master();
   }
 }
 
