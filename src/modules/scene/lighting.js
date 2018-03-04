@@ -5,7 +5,7 @@ class Lighting {
     this.scene = scene;
     this.lights = {
       point: {
-        a: new THREE.PointLight(0xffffff, 1, 30, 2)
+        a: new THREE.PointLight(0xffffff, 0.25, 30, 2)
       },
       ambient: {
         a: new THREE.AmbientLight(0xffffff, 0.05)

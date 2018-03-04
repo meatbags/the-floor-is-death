@@ -10,7 +10,7 @@ class Timer {
     // update timer, get delta time
 
     const now = (new Date()).getTime();
-    const delta = (this.time - now) / 1000.;
+    const delta = (now - this.time) / 1000.;
     this.age += delta;
     this.time = now;
 

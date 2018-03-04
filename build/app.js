@@ -221,17 +221,26 @@ var Scene = function () {
     _classCallCheck(this, Scene);
 
     this.scene = new THREE.Scene();
-    this.camera = new _camera.Camera(width, height);
     this.colliderSystem = new Collider.System();
     this.player = new _player.Player(this.scene, this.colliderSystem);
+    this.camera = new _camera.Camera(width, height, this.player.position);
     this.lighting = new _lighting.Lighting(this.scene);
 
-    this.scene.add(new THREE.Mesh(new THREE.BoxBufferGeometry(6, 2, 6), new THREE.MeshPhongMaterial({})));
+    // test the scene
+
+    for (var i = 1; i < 20; i++) {
+      var size = Math.random() * 5 + 5;
+      var mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(5, 1, 5), new THREE.MeshPhongMaterial({}));
+      mesh.position.set(Math.random() * 15 - 7, i * 2.5, 0);
+      this.scene.add(mesh);
+      this.colliderSystem.add(new Collider.Mesh(mesh));
+    }
   }
 
   _createClass(Scene, [{
     key: 'update',
     value: function update(delta) {
+      this.player.update(delta);
       this.camera.update(delta);
     }
   }, {
@@ -305,7 +314,7 @@ var Timer = function () {
       // update timer, get delta time
 
       var now = new Date().getTime();
-      var delta = (this.time - now) / 1000.;
+      var delta = (now - this.time) / 1000.;
       this.age += delta;
       this.time = now;
 
@@ -334,24 +343,23 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Camera = function () {
-  function Camera(width, height) {
+  function Camera(width, height, origin) {
     _classCallCheck(this, Camera);
 
+    // perspective camera
+
+    this.origin = origin;
     this.fov = 90;
     this.aspectRatio = width / height;
-    this.near = 0.1;
-    this.far = 1000;
-    this.origin = new THREE.Vector3(0, 0, 0);
-    this.angle = 0;
-    this.len = 20;
-    this.camera = new THREE.PerspectiveCamera(this.fov, this.aspectRatio, this.near, this.far);
+    this.angle = -Math.PI * 0.5;
+    this.len = 8;
+    this.camera = new THREE.PerspectiveCamera(this.fov, this.aspectRatio, 0.1, 1000);
   }
 
   _createClass(Camera, [{
     key: "update",
     value: function update(delta) {
-      this.angle += delta * Math.PI * 0.125;
-      this.camera.position.set(Math.cos(this.angle) * this.len, this.len / 2, Math.sin(this.angle) * this.len);
+      this.camera.position.set(this.origin.x + Math.cos(this.angle) * this.len, this.origin.y + this.len * 0.625, this.origin.z + Math.sin(this.angle) * this.len);
       this.camera.lookAt(this.origin);
     }
   }, {
@@ -1404,7 +1412,7 @@ var Lighting = function () {
     this.scene = scene;
     this.lights = {
       point: {
-        a: new THREE.PointLight(0xffffff, 1, 30, 2)
+        a: new THREE.PointLight(0xffffff, 0.25, 30, 2)
       },
       ambient: {
         a: new THREE.AmbientLight(0xffffff, 0.05)
@@ -1464,21 +1472,34 @@ var Player = function () {
 
     // represents the player
 
-    this.scene = scene;
-    this.position = new THREE.Vector3();
+    this.position = new THREE.Vector3(0, 1, 0);
     this.motion = new THREE.Vector3();
-    this.target = { position: new THREE.Vector3() };
-    this.speed = 6;
-    this.jump = 12;
+    this.target = {
+      position: new THREE.Vector3(),
+      motion: new THREE.Vector3()
+    };
+    this.speed = 10;
+    this.jump = 15;
     this.falling = false;
     this.fallTime = 0;
-    this.fallTimeThreshold = 0.1;
+    this.fallTimeThreshold = 0.125;
     this.keys = {};
     this.keyboard = new _input.Keyboard(function (key) {
       _this.onKeyboard(key);
     });
     this.collider = new Collider.Collider(this.target.position, this.motion);
+    this.collider.setPhysics({ gravity: 35 });
     this.colliderSystem = colliderSystem;
+    this.group = new THREE.Group();
+    this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshPhongMaterial({}));
+    this.mesh.position.y = 0.5;
+    this.light = new THREE.PointLight(0xffffff, 0.25, 5, 2);
+    this.light.position.y = 2;
+    this.group.add(this.mesh, this.light);
+
+    // add to scene
+
+    scene.add(this.group);
   }
 
   _createClass(Player, [{
@@ -1491,11 +1512,14 @@ var Player = function () {
         case 'd':case 'D':case 'ArrowRight':
           this.keys.right = this.keyboard.keys[key];
           break;
-        case 'w':case 'W':case 'ArrowUp':case ' ':
+        case 'w':case 'W':case 'ArrowUp':
           this.keys.up = this.keyboard.keys[key];
           break;
         case 's':case 'S':case 'ArrowDown':
           this.keys.down = this.keyboard.keys[key];
+          break;
+        case ' ':
+          this.keys.jump = this.keyboard.keys[key];
           break;
         default:
           break;
@@ -1507,11 +1531,19 @@ var Player = function () {
       // translate key input to motion
 
       if (this.keys.left || this.keys.right) {
-        this.target.motion.z = ((this.keys.left ? -1 : 0) + (this.keys.right ? 1 : 0)) * this.speed;
+        this.target.motion.x = ((this.keys.left ? 1 : 0) + (this.keys.right ? -1 : 0)) * this.speed;
+      } else {
+        this.target.motion.x = 0;
       }
 
-      if (this.keys.up) {
-        this.keys.up = false;
+      if (this.keys.up || this.keys.down) {
+        this.target.motion.z = ((this.keys.up ? 1 : 0) + (this.keys.down ? -1 : 0)) * this.speed;
+      } else {
+        this.target.motion.z = 0;
+      }
+
+      if (this.keys.jump) {
+        this.keys.jump = false;
 
         if (this.motion.y == 0 || this.fallTime < this.fallTimeThreshold) {
           this.motion.y = this.jump;
@@ -1526,18 +1558,19 @@ var Player = function () {
         this.motion.x = this.target.motion.x;
         this.motion.z = this.target.motion.z;
       } else {
-        this.motion.x = (0, _maths.Blend)(this.motion.x, this.target.motion.x, 0.1);
-        this.motion.z = (0, _maths.Blend)(this.motion.x, this.target.motion.x, 0.1);
+        this.motion.x = (0, _maths.Blend)(this.motion.x, this.target.motion.x, 0.15);
+        this.motion.z = (0, _maths.Blend)(this.motion.z, this.target.motion.z, 0.15);
       }
     }
   }, {
     key: 'update',
     value: function update(delta) {
-      this.move();
-      this.collider.move(this.colliderSystem);
-      this.position.x = (0, _maths.Blend)(this.position.x, this.target.position.x, 0.1);
-      this.position.y = (0, _maths.Blend)(this.position.y, this.target.position.y, 0.1);
-      this.position.z = (0, _maths.Blend)(this.position.z, this.target.position.z, 0.1);
+      this.move(delta);
+      this.collider.move(delta, this.colliderSystem);
+      this.position.x = (0, _maths.Blend)(this.position.x, this.target.position.x, 0.25);
+      this.position.y = (0, _maths.Blend)(this.position.y, this.target.position.y, 0.25);
+      this.position.z = (0, _maths.Blend)(this.position.z, this.target.position.z, 0.25);
+      this.group.position.set(this.position.x, this.position.y, this.position.z);
     }
   }]);
 
